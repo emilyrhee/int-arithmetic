@@ -8,13 +8,6 @@ prompts:
 
 .text
 .globl main
-swap:
-	add $t2, $t0, $zero
-	add $t3, $t1, $zero
-
-	add $t0, $t3, $zero
-	add $t1, $t2, $zero
-
 main:
     # prompt the user
     lui $a0, 0x1001
@@ -39,12 +32,22 @@ main:
 	# take input
 	li $v0, 5
 	syscall
-	
+
 	# store input
 	add $t1, $v0, $zero
 	
 	# check for larger number
 	bgt $t0, $t1, swap
 	
+exit:
+	li $v0, 17
+	syscall
 	
+swap:
+	add $t2, $t0, $zero
+	add $t3, $t1, $zero
+
+	add $t0, $t3, $zero
+	add $t1, $t2, $zero
 	
+	j main
