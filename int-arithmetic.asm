@@ -1,36 +1,37 @@
+# Emily Rhee
+
 .data
 prompts:
-    .asciiz "Enter an integer: "
-    .asciiz "Enter another integer: "
-
-	smaller: .word 0
-	larger: .word 0
+    .asciiz "Enter an integer: " # 19 chars
+    .asciiz "Enter another integer: " # 24 chars, sum 0x2B (43)
+	.asciiz "Larger integer: " 
+	.asciiz "Smaller integer: "
+	.asciiz "Quotient: "
+	.asciiz "Remainder: "
 
 .text
 .globl main
 main:
-    # prompt the user
+    # print user prompt
     lui $a0, 0x1001
-    ori $a0, $a0, 0x0000
-    la $a0, prompts
-    li $v0, 4
+    addi $v0, $zero, 4
     syscall
 
 	# take input
-	li $v0, 5
+	addi $v0, $zero, 5
 	syscall
 	
 	# store input
 	add $t0, $v0, $zero
 	
-	# prompt the user
+	# print user prompt
     lui $a0, 0x1001
     ori $a0, $a0, 0x0013
-    li $v0, 4
+    addi $v0, $zero, 4
     syscall
 	
 	# take input
-	li $v0, 5
+	addi $v0, $zero, 5
 	syscall
 
 	# store input
@@ -39,8 +40,19 @@ main:
 	# check for larger number
 	bgt $t0, $t1, swap
 	
-exit:
-	li $v0, 17
+results:
+	# print larger int
+    lui $a0, 0x1001
+    ori $a0, $a0, 0x002B
+	addi $v0, $zero, 4
+	syscall
+	
+	add $a0, $t1, $zero
+	addi $v0, $zero, 1
+	syscall
+	
+	# terminate program
+	addi $v0, $zero, 17
 	syscall
 	
 swap:
@@ -50,4 +62,4 @@ swap:
 	add $t0, $t3, $zero
 	add $t1, $t2, $zero
 	
-	j main
+	j results
