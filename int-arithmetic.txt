@@ -17,6 +17,8 @@ data_memory:
 .text
 .globl main
 main:
+	lui $a1, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+	
     # print user prompt
     lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
     addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
@@ -45,11 +47,19 @@ main:
 	# check for larger number
 	slt $t5, $t1, $t0		# set less than, R format, if $t1 < $t0, set $t5 = 1. else, $at = 0
 	bne $t5, $zero, swap	# branch on not equal, I format, branch to swap if $t5 = 1 ($t1 < $t0), else, continue
-
+	
+	sw $t0,0($a1)			# store word, I format, store int in $t0 in 0th memory address
+	sw $t1,4($a1)			# store word, I format, store int in $t1 in 4th memory address
 divide:
+	lw $t0,0($a1)			# load word, I format, loads int stored in 0th memory address into $t0
+	lw $t1,4($a1)			# load word, I format, loads int stored in 4th memory address into $t1
+		
 	div $t1, $t0			# divide, R format, $t1 (larger int) ÷ $t0 (smaller int). quotient stored in lo, remainder stored in hi
 	mflo $t2				# move from lo, R format, moves quotient to $t2
 	mfhi $t3				# move from hi, R format, moves remainder to $t3
+	
+	sw $t2,8($a1)			# store word, I format, store int in $t2 in 8th memory address
+	sw $t3,12($a1)			# store word, I format, store int in $t3 in 12th memory address
 
 results:
 	# print larger int
@@ -58,8 +68,8 @@ results:
 	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
 	syscall
 	
-	add $a0, $t1, $zero		# add, R format, add $t1 (larger int) into $a0 in preparation to print value
 	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	lw $a0,4($a1)			# load word, I format, loads int stored in 4th memory address into $a0
 	syscall
 	
 	# print new line
@@ -73,8 +83,8 @@ results:
 	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
 	syscall
 
-	add $a0, $t0, $zero		# add, R format, add $t0 (smaller int) into $a0 in preparation to print value
 	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	lw $a0,0($a1)			# load word, I format, loads int stored in 0th memory address into $a0
 	syscall
 	
 	# print new line
@@ -88,8 +98,8 @@ results:
 	addi $v0, $zero, 4		# add immediate value, I format, add 4 + 0 to $v0 to perform print string syscall
 	syscall
 	
-	add $a0, $t2, $zero		# add, R format, add $t2 (quotient) into $a0 in preparation to print value
 	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	lw $a0,8($a1)			# load word, I format, loads int stored in 8th memory address into $a0
 	syscall
 	
 	# print new line
@@ -103,8 +113,8 @@ results:
 	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 into perform print string syscall
 	syscall
 	
-	add $a0, $t3, $zero		# add, R format, add $t3 (remainder) into $a0 in preparation to print value
 	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 into perform print integer syscall
+	lw $a0,12($a1)			# load word, I format, loads int stored in 12th memory address into $a0
 	syscall
 	
 	# terminate program
@@ -112,10 +122,7 @@ results:
 	syscall
 	
 swap:
-	add $t2, $t0, $zero		# add, R format, perform $t0 (current larger int) + 0 into $t2 to temporarily save it
-	add $t3, $t1, $zero		# add, R format, perform $t1 (current smaller int) + 0 into $t3 to temporarily save it
-
-	add $t0, $t3, $zero		# add, R format, perform $t3 (smaller int) + 0 into $t0
-	add $t1, $t2, $zero		# add, R format, perform $t2 (larger int) + 0 into $t1
+	sw $t1,0($a1)			# store word, I format, store int in $t1 in 0th memory address
+	sw $t0,4($a1)			# store word, I format, store int in $t0 in 4th memory address
 	
 	j divide				# jump, J format, go to divide label in program
