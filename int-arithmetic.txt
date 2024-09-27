@@ -1,0 +1,121 @@
+# Emily Rhee
+
+.data
+prompts:
+    .asciiz "Enter an integer: " # 19 chars (including null char), sum 0x13 (19)
+    .asciiz "Enter another integer: " # 24 chars, sum 0x2B (19 + 24 = 43)
+
+result_labels:
+	.asciiz "Larger integer: " # 17 chars, sum 0x3C (43 + 17 = 60)
+	.asciiz "Smaller integer: " # 18 chars, sum 0x4E (60 + 18 = 78)
+	.asciiz "Quotient: " # 11 chars, sum 0x59 (78 + 11 = 89)
+	.asciiz "Remainder: "
+	
+data_memory:
+	.word 0, 0, 0, 0
+
+.text
+.globl main
+main:
+    # print user prompt
+    lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
+    syscall
+
+	# take input
+	addi $v0, $zero, 5		# add immediate value, I format, perform 5 + 0 to $v0 to perform read integer syscall
+	syscall
+	
+	# store input
+	add $t0, $v0, $zero		# add, R format, put value from input (stored in $v0) + 0 into $t0
+	
+	# print user prompt
+    lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    ori $a0, $a0, 0x0013	# or immediate, I, set lower 16 bits of register to 0x0013 to load "Enter another integer: " asciiz defined in .data
+    addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
+    syscall
+
+	# take input
+	addi $v0, $zero, 5		# add immediate value, I format, add 5 + 0 to $v0 to perform read integer syscall
+	syscall
+
+	# store input
+	add $t1, $v0, $zero		# add, R format, add value from input (stored in $v0) + 0 to $t0
+	
+	# check for larger number
+	slt $t5, $t1, $t0		# set less than, R format, if $t1 < $t0, set $t5 = 1. else, $at = 0
+	bne $t5, $zero, swap	# branch on not equal, I format, branch to swap if $t5 = 1 ($t1 < $t0), else, continue
+
+divide:
+	div $t1, $t0			# divide, R format, $t1 (larger int) ÷ $t0 (smaller int). quotient stored in lo, remainder stored in hi
+	mflo $t2				# move from lo, R format, moves quotient to $t2
+	mfhi $t3				# move from hi, R format, moves remainder to $t3
+
+results:
+	# print larger int
+    lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    ori $a0, $a0, 0x002B	# or immediate, I, set lower 16 bits of register to 0x002B to load "Larger integer: " asciiz defined in .data
+	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
+	syscall
+	
+	add $a0, $t1, $zero		# add, R format, add $t1 (larger int) into $a0 in preparation to print value
+	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	syscall
+	
+	# print new line
+	addi $a0, $zero, 10		# add immediate value, I format, perform 10 + 0 into $a0 to print new line (ASCII code for '\n' = 10)
+	addi $v0, $zero, 11		# add immediate value, I format, perform 11 + 0 into $v0 to perform print char syscall
+	syscall
+	
+	# print smaller int
+    lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    ori $a0, $a0, 0x003C	# or immediate, I format, set lower 16 bits of register to 0x003C to load "Smaller integer: " asciiz defined in .data
+	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 to perform print string syscall
+	syscall
+
+	add $a0, $t0, $zero		# add, R format, add $t0 (smaller int) into $a0 in preparation to print value
+	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	syscall
+	
+	# print new line
+	addi $a0, $zero, 10		# add immediate value, I format, perform 10 + 0 into $a0 to print new line (ASCII code for '\n' = 10)
+	addi $v0, $zero, 11		# add immediate value, I format, perform 11 + 0 into $v0 to perform print char syscall
+	syscall
+	
+	# print quotient
+	lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    ori $a0, $a0, 0x004E	# or immediate, I format, set lower 16 bits of register to 0x004E to load "Quotient: " asciiz defined in .data
+	addi $v0, $zero, 4		# add immediate value, I format, add 4 + 0 to $v0 to perform print string syscall
+	syscall
+	
+	add $a0, $t2, $zero		# add, R format, add $t2 (quotient) into $a0 in preparation to print value
+	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 to perform print integer syscall
+	syscall
+	
+	# print new line
+	addi $a0, $zero, 10		# add immediate value, I format, perform 10 + 0 into $a0 to print new line (ASCII code for '\n' = 10)
+	addi $v0, $zero, 11		# add immediate value, I format, perform 11 + 0 into $v0 to perform print char syscall
+	syscall
+	
+	# print remainder
+	lui $a0, 0x1001			# load upper immediate value, I format, set upper 4 bytes of register to 0x1001 (defined data begins here)
+    ori $a0, $a0, 0x0059	# or immediate, I, set lower 16 bits of register to 0x0059 to load "Remainder: " asciiz defined in .data
+	addi $v0, $zero, 4		# add immediate value, I format, perform 4 + 0 to $v0 into perform print string syscall
+	syscall
+	
+	add $a0, $t3, $zero		# add, R format, add $t3 (remainder) into $a0 in preparation to print value
+	addi $v0, $zero, 1		# add immediate value, I format, perform 1 + 0 to $v0 into perform print integer syscall
+	syscall
+	
+	# terminate program
+	addi $v0, $zero, 17		# add immediate value, I format, perform 17 + 0 into $v0 to perform exit syscall
+	syscall
+	
+swap:
+	add $t2, $t0, $zero		# add, R format, perform $t0 (current larger int) + 0 into $t2 to temporarily save it
+	add $t3, $t1, $zero		# add, R format, perform $t1 (current smaller int) + 0 into $t3 to temporarily save it
+
+	add $t0, $t3, $zero		# add, R format, perform $t3 (smaller int) + 0 into $t0
+	add $t1, $t2, $zero		# add, R format, perform $t2 (larger int) + 0 into $t1
+	
+	j divide				# jump, J format, go to divide label in program
